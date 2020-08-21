@@ -1,8 +1,7 @@
 name: Build and Publish Docker Image
-on: [push]
-trigger:
-  branches:
-    include:
+on:
+  push:
+    branches:
       - master
 jobs:
   build:
