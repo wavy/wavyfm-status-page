@@ -1,0 +1,23 @@
+name: Build and Publish Docker Image
+on: [push]
+trigger:
+  branches:
+    include:
+      - master
+jobs:
+  build:
+    runs-on: rust-buster
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Build binary
+        run: cargo build --release
+
+      - name: Push to Docker Hub
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.pkg.github.com
+          repository: wavymedia/wavy-status-page/wavy-status-page
+          tag_with_ref: true
