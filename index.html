@@ -272,9 +272,9 @@
     }
 
     function update() {
-        resetColors();
         getAllStatuses()
             .then(statuses => {
+                resetColors();
                 const color = getGlobalStatusColor(statuses);
                 const title = getGlobalStatusTitle(statuses);
                 const time = "A few moments ago";
