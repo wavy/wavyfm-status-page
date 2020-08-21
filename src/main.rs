@@ -3,7 +3,6 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 
-use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use futures_util::core_reexport::time::Duration;
@@ -87,10 +86,14 @@ async fn website_check_task(interval: &mut tokio::time::Interval, system: &mut S
 
         let status = match client.get("https://wavy.fm").send().await {
             Ok(resp) => resp.status().as_u16(),
-            Err(_) => 500
+            Err(e) => {
+                error!("Error performing request: {:?}", e);
+                999
+            }
         };
 
         let up = status >= 200 && status < 400;
+        debug!("Status: {}", status);
         let new_status = if up { SystemStatus::Green } else { SystemStatus::Red };
         update_status(system, new_status).await.unwrap();
 
@@ -108,21 +111,18 @@ async fn api_check_task(interval: &mut tokio::time::Interval, system: &mut Syste
 
         let status = match client.get("https://api.wavy.fm/healthz").send().await {
             Ok(resp) => resp.status().as_u16(),
-            Err(_) => 500
+            Err(e) => {
+                error!("Error performing request: {:?}", e);
+                999
+            }
         };
 
         let up = status >= 200 && status < 400;
+        debug!("Status: {}", status);
         let new_status = if up { SystemStatus::Green } else { SystemStatus::Red };
         update_status(system, new_status).await.unwrap();
 
         info!("{:?}", system);
-    }
-}
-
-async fn file_writer_task(interval: &mut tokio::time::Interval, systems: Vec<&Arc<SystemInfo>>) {
-    loop {
-        interval.tick().await;
-        println!("{}", systems.len());
     }
 }
 
