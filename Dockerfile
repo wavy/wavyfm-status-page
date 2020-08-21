@@ -1,6 +1,6 @@
 FROM debian:buster
 
-RUN apt-get update && apt-get install -y "libssl1.1"
+RUN apt-get update && apt-get install -y "libssl1.1" ca-certificates
 
 WORKDIR /opt/status-page
 
