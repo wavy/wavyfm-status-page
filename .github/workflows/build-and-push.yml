@@ -4,8 +4,8 @@ on:
     branches:
       - master
 jobs:
-  build:
-    runs-on: rust-buster
+  build-publish:
+    container: rust:buster
     steps:
       - uses: actions/checkout@master
 
