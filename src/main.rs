@@ -14,6 +14,14 @@ use tokio::io;
 use tokio::io::AsyncWriteExt;
 use warp::Filter;
 
+lazy_static! {
+    static ref PORT: u16 = {
+        let var = std::env::var("PORT").unwrap_or_else(|_| String::from("80"));
+        var.parse::<u16>()
+            .unwrap_or_else(|_| panic!("Invalid port number: {}", var))
+    };
+}
+
 #[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
 enum SystemStatus {
     Green = 1,
@@ -127,7 +135,7 @@ async fn warp_main() {
         .and(warp::path::end())
         .and(warp::fs::file("index.html"));
 
-    warp::serve(status_route.or(index_route)).run(([0, 0, 0, 0], 8080)).await
+    warp::serve(status_route.or(index_route)).run(([0, 0, 0, 0], *PORT)).await
 }
 
 #[tokio::main]
