@@ -1,0 +1,20 @@
+[package]
+name = "wavy-status-page"
+version = "0.1.0"
+authors = ["Aram Peres <aram.peres@wavy.fm>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "0.2", features = ["full"] }
+futures = "0.3.5"
+futures-util = "0.3.5"
+lazy_static = "1.4.0"
+pretty_env_logger = "0.4.0"
+log = "0.4.8"
+base64 = "0.12.2"
+warp = { version = "0.2.3" }
+reqwest = "0.10.7"
+serde = { version = "1.0.115", features = ["derive"] }
+serde_json = "1.0.57"

@@ -1,0 +1,291 @@
+<html>
+<head>
+    <title>wavy.fm status</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+
+        body {
+            margin: 0;
+            background-color: #23292F;
+            font-family: 'Cabin', sans-serif;
+            color: #FAFAFA;
+        }
+
+        .content {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .global-status {
+            margin: 100px 0 25px 0;
+            width: 100%;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            border-radius: 5px;
+            box-sizing: border-box;
+
+            background-color: #555555;
+            transition: background-color 0.25s;
+        }
+
+        .global-status-title {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .global-status-time {
+            font-size: 16px;
+        }
+
+        .green-background {
+            background-color: #1CDEA1 !important;
+        }
+
+        .yellow-background {
+            background-color: #FFC738 !important;
+        }
+
+        .red-background {
+            background-color: #DE3F1C !important;
+        }
+
+        .green-text {
+            color: #1CDEA1 !important;
+        }
+
+        .yellow-text {
+            color: #FFC738 !important;
+        }
+
+        .red-text {
+            color: #DE3F1C !important;
+        }
+
+        .logo {
+            margin-top: 20px;
+            display: block;
+        }
+
+        .system-list {
+            width: 100%;
+        }
+
+        .system-row {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 75px;
+            padding-right: 30px;
+            box-sizing: border-box;
+        }
+
+        .system-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 5px;
+            background-color: #555555;
+            transition: background-color 0.25s;
+            margin-right: 20px;
+        }
+
+        .system-title {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .system-status {
+            font-size: 22px;
+            font-weight: 500;
+            transition: background-color 0.25s;
+        }
+
+        .system-description {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <a href="https://wavy.fm">
+        <img class="logo" alt="wavy.fm"
+             src="data:image/png;base64,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">
+    </a>
+    <div class="global-status">
+        <div class="global-status-title"></div>
+        <div class="global-status-time"></div>
+    </div>
+    <div class="system-list">
+        <div class="system-row" id="system-website">
+            <div style="display: flex; flex-grow: 1">
+                <div class="system-icon"></div>
+                <div class="system-meta">
+                    <div class="system-title">Website</div>
+                    <div class="system-description">The wavy.fm website. Pretty straightforward.</div>
+                </div>
+            </div>
+            <div class="system-status"></div>
+        </div>
+        <div class="system-row" id="system-api">
+            <div style="display: flex; flex-grow: 1">
+                <div class="system-icon"></div>
+                <div class="system-meta">
+                    <div class="system-title">wavy.fm API</div>
+                    <div class="system-description">The API that backs the wavy.fm website.</div>
+                </div>
+            </div>
+            <div class="system-status"></div>
+        </div>
+<!--        <div class="system-row" id="system-spotify_tracking">-->
+<!--            <div style="display: flex; flex-grow: 1">-->
+<!--                <div class="system-icon"></div>-->
+<!--                <div class="system-meta">-->
+<!--                    <div class="system-title">Spotify Tracking</div>-->
+<!--                    <div class="system-description">The systems that automatically track your Spotify history on-->
+<!--                        wavy.fm-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <div class="system-status"></div>-->
+<!--        </div>-->
+    </div>
+</div>
+
+<script type="application/javascript">
+    function getIncidentName(systemId) {
+        switch (systemId) {
+            case "website":
+                return "Website is Unavailable";
+            case "api":
+                return "wavy.fm API is Unavailable"
+            case "spotify_tracking":
+                return "Spotify Tracking is Delayed"
+        }
+    }
+
+    function getStatus(system) {
+        return fetch("/status/" + system + ".json")
+            .then(resp => {
+                if (resp.ok) {
+                    return resp.json()
+                } else {
+                    return undefined;
+                }
+            })
+            .catch(err => {
+                return undefined;
+            })
+    }
+
+    function getAllStatuses() {
+        return Promise.all([getStatus("website"), getStatus("api"), getStatus("spotify_tracking")]);
+    }
+
+    function getGlobalStatusTitle(statuses) {
+        let title = undefined;
+        let multiple = false;
+        statuses.forEach(status => {
+            if (status && status.status !== "Green") {
+                if (!title) {
+                    title = getIncidentName(status.id);
+                } else {
+                    multiple = true;
+                }
+            }
+        })
+
+        if (multiple) {
+            return "Multiple Systems Failing";
+        } else {
+            return title || "All Systems Operational"
+        }
+    }
+
+    function resetColors() {
+        let nodes;
+
+        nodes = document.getElementsByClassName("green-text");
+        while (nodes.length) nodes[0].classList.remove("green-text");
+
+        nodes = document.getElementsByClassName("yellow-text");
+        while (nodes.length) nodes[0].classList.remove("yellow-text");
+
+        nodes = document.getElementsByClassName("red-text");
+        while (nodes.length) nodes[0].classList.remove("red-text");
+
+        nodes = document.getElementsByClassName("green-background");
+        while (nodes.length) nodes[0].classList.remove("green-background");
+
+        nodes = document.getElementsByClassName("yellow-background");
+        while (nodes.length) nodes[0].classList.remove("yellow-background");
+
+        nodes = document.getElementsByClassName("red-background");
+        while (nodes.length) nodes[0].classList.remove("red-background");
+    }
+
+    function getGlobalStatusColor(statuses) {
+        if (statuses.every(status => !status || status.status === "Green")) return "green";
+        if (statuses.find(status => status && status.status === "Red")) return "red";
+        return "yellow";
+    }
+
+    function updateGlobalStatus(color, title, time) {
+        document.getElementsByClassName("global-status-title").item(0).innerText = title;
+        document.getElementsByClassName("global-status-time").item(0).innerText = time;
+        document.getElementsByClassName("global-status").item(0).classList.add(color + "-background");
+    }
+
+    function updateSystemStatus(status) {
+        if (!status) {
+            return;
+        }
+
+        const color = status.status.toLowerCase();
+
+        const icon = document.querySelector(`#system-${status.id} .system-icon`);
+        const statusText = document.querySelector(`#system-${status.id} .system-status`);
+
+        if (icon) {
+            icon.classList.add(color + "-background");
+        }
+        if (statusText) {
+            statusText.classList.add(color + "-text");
+            switch (color) {
+                case "green":
+                    statusText.innerText = "Operational"
+                    break;
+                case "yellow":
+                    statusText.innerText = "Incident"
+                    break;
+                case "red":
+                    statusText.innerText = "Critical"
+                    break;
+            }
+        }
+    }
+
+    function update() {
+        resetColors();
+        getAllStatuses()
+            .then(statuses => {
+                const color = getGlobalStatusColor(statuses);
+                const title = getGlobalStatusTitle(statuses);
+                const time = "A few moments ago";
+
+                updateGlobalStatus(color, title, time);
+                statuses.forEach(updateSystemStatus);
+            })
+    }
+
+    setInterval(update, 15000);
+    update();
+</script>
+</body>
+</html>
