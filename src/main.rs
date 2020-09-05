@@ -48,7 +48,10 @@ impl SystemInfo {
 }
 
 fn current_time_seconds() -> u64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
 }
 
 async fn update_status(system: &mut SystemInfo, new_status: SystemStatus) -> io::Result<()> {
@@ -82,7 +85,8 @@ async fn website_check_task(interval: &mut tokio::time::Interval, system: &mut S
 
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(10))
-            .build().unwrap();
+            .build()
+            .unwrap();
 
         let status = match client.get("https://wavy.fm").send().await {
             Ok(resp) => resp.status().as_u16(),
@@ -94,7 +98,11 @@ async fn website_check_task(interval: &mut tokio::time::Interval, system: &mut S
 
         let up = status >= 200 && status < 400;
         debug!("Status: {}", status);
-        let new_status = if up { SystemStatus::Green } else { SystemStatus::Red };
+        let new_status = if up {
+            SystemStatus::Green
+        } else {
+            SystemStatus::Red
+        };
         update_status(system, new_status).await.unwrap();
 
         info!("{:?}", system);
@@ -107,7 +115,8 @@ async fn api_check_task(interval: &mut tokio::time::Interval, system: &mut Syste
 
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(10))
-            .build().unwrap();
+            .build()
+            .unwrap();
 
         let status = match client.get("https://api.wavy.fm/healthz").send().await {
             Ok(resp) => resp.status().as_u16(),
@@ -119,10 +128,32 @@ async fn api_check_task(interval: &mut tokio::time::Interval, system: &mut Syste
 
         let up = status >= 200 && status < 400;
         debug!("Status: {}", status);
-        let new_status = if up { SystemStatus::Green } else { SystemStatus::Red };
+        let new_status = if up {
+            SystemStatus::Green
+        } else {
+            SystemStatus::Red
+        };
         update_status(system, new_status).await.unwrap();
 
         info!("{:?}", system);
+    }
+}
+
+async fn get_metrics() -> std::result::Result<String, warp::reject::Rejection> {
+    match reqwest::get("https://api.wavy.fm/metrics/listens/48h").await {
+        Ok(resp) => {
+            match resp.text().await {
+                Ok(text) => Ok(text),
+                Err(e) => {
+                    error!("Failed to get metrics: {:?}", e);
+                    Ok(String::from(""))
+                }
+            }
+        },
+        Err(e) => {
+            error!("Failed to get metrics: {:?}", e);
+            Ok(String::from(""))
+        }
     }
 }
 
@@ -131,11 +162,15 @@ async fn warp_main() {
         .and(warp::path("status"))
         .and(warp::fs::dir("./status/"));
 
+    let metrics_route = warp::get().and(warp::path("metrics")).and_then(get_metrics);
+
     let index_route = warp::get()
         .and(warp::path::end())
         .and(warp::fs::file("index.html"));
 
-    warp::serve(status_route.or(index_route)).run(([0, 0, 0, 0], *PORT)).await
+    warp::serve(status_route.or(index_route).or(metrics_route))
+        .run(([0, 0, 0, 0], *PORT))
+        .await
 }
 
 #[tokio::main]

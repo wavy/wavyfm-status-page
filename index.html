@@ -2,6 +2,7 @@
 <head>
     <title>wavy.fm status</title>
     <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
 
@@ -17,8 +18,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            max-width: 1000px;
+            max-width: 1040px;
             margin: 0 auto;
+            padding: 0 20px;
+            box-sizing: border-box;
         }
 
         .global-status {
@@ -91,6 +94,7 @@
         .system-icon {
             width: 32px;
             height: 32px;
+            min-width: 32px;
             border-radius: 5px;
             background-color: #555555;
             transition: background-color 0.25s;
@@ -110,6 +114,22 @@
 
         .system-description {
             font-size: 16px;
+        }
+
+        .metrics {
+            border-top: solid 1px #CCC;
+            width: 100%;
+            margin-top: 105px;
+            padding: 50px 0;
+        }
+
+        #listens-graph {
+            width: 100%;
+            height: 400px;
+        }
+
+        .dygraph-axis-label {
+            color: #CCCCCC;
         }
     </style>
 </head>
@@ -156,9 +176,15 @@
 <!--            <div class="system-status"></div>-->
 <!--        </div>-->
     </div>
+    <div class="metrics">
+        <div id="listens-graph"></div>
+    </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min.js"></script>
 <script type="application/javascript">
+    let graph;
+
     function getIncidentName(systemId) {
         switch (systemId) {
             case "website":
@@ -271,6 +297,20 @@
         }
     }
 
+    function getMetrics() {
+        return fetch("/metrics")
+            .then(resp => {
+                if (resp.ok) {
+                    return resp.json()
+                } else {
+                    return undefined;
+                }
+            })
+            .catch(err => {
+                return undefined;
+            })
+    }
+
     function update() {
         getAllStatuses()
             .then(statuses => {
@@ -282,6 +322,33 @@
                 updateGlobalStatus(color, title, time);
                 statuses.forEach(updateSystemStatus);
             })
+
+        getMetrics()
+            .then(metrics => {
+                const data = metrics.map(row => {
+                    return [new Date(row._id), row.count]
+                })
+
+                // Remove edges because of partial data
+                data.shift();
+                data.pop();
+
+                if (graph) {
+                    graph.updateOptions({file: data});
+                } else {
+                    const div = document.getElementById("listens-graph");
+                    if (div) {
+                        div.innerHTML = "";
+                        graph = new Dygraph(div, data, {
+                            legend: 'never',
+                            title: 'Listens per minute (past 48h) -- UTC',
+                            colors: ["#48c3d2"],
+                            includeZero: true
+                        });
+                    }
+                }
+            })
+            .catch(console.error)
     }
 
     setInterval(update, 15000);
