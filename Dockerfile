@@ -11,4 +11,4 @@ COPY run-with-https.sh .
 RUN chmod +x ./run-with-https.sh
 RUN mkdir status
 
-CMD ["run-with-https.sh"]
+CMD ["/opt/status-page/run-with-https.sh"]
