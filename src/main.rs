@@ -19,6 +19,12 @@ lazy_static! {
         var.parse::<u16>()
             .unwrap_or_else(|_| panic!("Invalid port number: {}", var))
     };
+
+    static ref HTTPS: bool = {
+        let var = std::env::var("HTTPS").unwrap_or_else(|_| String::from("0"));
+        var.parse::<u16>()
+            .unwrap_or_else(|_| panic!("Invalid HTTPS flag: {}", var)) > 0
+    };
 }
 
 #[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
@@ -149,7 +155,7 @@ async fn get_metrics() -> std::result::Result<String, warp::reject::Rejection> {
                     Ok(String::from(""))
                 }
             }
-        },
+        }
         Err(e) => {
             error!("Failed to get metrics: {:?}", e);
             Ok(String::from(""))
@@ -168,9 +174,27 @@ async fn warp_main() {
         .and(warp::path::end())
         .and(warp::fs::file("index.html"));
 
-    warp::serve(status_route.or(index_route).or(metrics_route))
-        .run(([0, 0, 0, 0], *PORT))
-        .await
+    let routes = status_route.or(index_route).or(metrics_route);
+    if *HTTPS {
+        warp::serve(routes)
+            .tls()
+            .cert_path("/etc/letsencrypt/live/status.wavy.fm/fullchain.pem")
+            .key_path("/etc/letsencrypt/live/status.wavy.fm/privkey.pem")
+            .run(([0, 0, 0, 0], *PORT))
+            .await
+    } else {
+        warp::serve(routes)
+            .run(([0, 0, 0, 0], *PORT))
+            .await
+    }
+}
+
+async fn warp_http_redirect() {
+    if *HTTPS {
+        warp::serve(warp::any().map(|| warp::redirect(warp::http::Uri::from_static("https://status.wavy.fm"))))
+            .run(([0, 0, 0, 0], 80))
+            .await
+    }
 }
 
 #[tokio::main]
@@ -186,6 +210,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         tokio::join!(
             warp_main(),
+            warp_http_redirect(),
             website_check_task(&mut website_interval, &mut website_system),
             api_check_task(&mut api_interval, &mut api_system)
         );
