@@ -1,7 +1,6 @@
 FROM debian:buster
 
-RUN apt-get update && apt-get install -y software-properties-common "libssl1.1"
-RUN add-apt-repository -y ppa:certbot/certbot && apt-get update && apt-get install -y ca-certificates certbot
+RUN apt-get update && apt-get install -y "libssl1.1" ca-certificates certbot
 
 WORKDIR /opt/status-page
 
