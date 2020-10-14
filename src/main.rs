@@ -19,11 +19,11 @@ lazy_static! {
         var.parse::<u16>()
             .unwrap_or_else(|_| panic!("Invalid port number: {}", var))
     };
-
     static ref HTTPS: bool = {
         let var = std::env::var("HTTPS").unwrap_or_else(|_| String::from("0"));
         var.parse::<u16>()
-            .unwrap_or_else(|_| panic!("Invalid HTTPS flag: {}", var)) > 0
+            .unwrap_or_else(|_| panic!("Invalid HTTPS flag: {}", var))
+            > 0
     };
 }
 
@@ -147,15 +147,13 @@ async fn api_check_task(interval: &mut tokio::time::Interval, system: &mut Syste
 
 async fn get_metrics() -> std::result::Result<String, warp::reject::Rejection> {
     match reqwest::get("https://api.wavy.fm/metrics/listens/48h").await {
-        Ok(resp) => {
-            match resp.text().await {
-                Ok(text) => Ok(text),
-                Err(e) => {
-                    error!("Failed to get metrics: {:?}", e);
-                    Ok(String::from(""))
-                }
+        Ok(resp) => match resp.text().await {
+            Ok(text) => Ok(text),
+            Err(e) => {
+                error!("Failed to get metrics: {:?}", e);
+                Ok(String::from(""))
             }
-        }
+        },
         Err(e) => {
             error!("Failed to get metrics: {:?}", e);
             Ok(String::from(""))
@@ -183,17 +181,18 @@ async fn warp_main() {
             .run(([0, 0, 0, 0], *PORT))
             .await
     } else {
-        warp::serve(routes)
-            .run(([0, 0, 0, 0], *PORT))
-            .await
+        warp::serve(routes).run(([0, 0, 0, 0], *PORT)).await
     }
 }
 
 async fn warp_http_redirect() {
     if *HTTPS {
-        warp::serve(warp::any().map(|| warp::redirect(warp::http::Uri::from_static("https://status.wavy.fm"))))
-            .run(([0, 0, 0, 0], 80))
-            .await
+        warp::serve(
+            warp::any()
+                .map(|| warp::redirect(warp::http::Uri::from_static("https://status.wavy.fm"))),
+        )
+        .run(([0, 0, 0, 0], 80))
+        .await
     }
 }
 
@@ -201,18 +200,23 @@ async fn warp_http_redirect() {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     logger_builder().init();
 
-    let mut website_interval = tokio::time::interval(Duration::from_secs(30));
-    let mut api_interval = tokio::time::interval(Duration::from_secs(30));
+    tokio::spawn(async {
+        let mut api_interval = tokio::time::interval(Duration::from_secs(30));
+        let mut api_system = SystemInfo::new("api");
+        loop {
+            api_check_task(&mut api_interval, &mut api_system).await
+        }
+    });
 
-    let mut website_system = SystemInfo::new("website");
-    let mut api_system = SystemInfo::new("api");
+    tokio::spawn(async {
+        let mut website_interval = tokio::time::interval(Duration::from_secs(30));
+        let mut website_system = SystemInfo::new("website");
+        loop {
+            website_check_task(&mut website_interval, &mut website_system).await
+        }
+    });
 
-    loop {
-        tokio::join!(
-            warp_main(),
-            warp_http_redirect(),
-            website_check_task(&mut website_interval, &mut website_system),
-            api_check_task(&mut api_interval, &mut api_system)
-        );
-    }
+    tokio::spawn(async { warp_http_redirect().await });
+
+    Ok(warp_main().await)
 }
