@@ -203,17 +203,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tokio::spawn(async {
         let mut api_interval = tokio::time::interval(Duration::from_secs(30));
         let mut api_system = SystemInfo::new("api");
-        loop {
-            api_check_task(&mut api_interval, &mut api_system).await
-        }
+        api_check_task(&mut api_interval, &mut api_system).await
     });
 
     tokio::spawn(async {
         let mut website_interval = tokio::time::interval(Duration::from_secs(30));
         let mut website_system = SystemInfo::new("website");
-        loop {
-            website_check_task(&mut website_interval, &mut website_system).await
-        }
+        website_check_task(&mut website_interval, &mut website_system).await
     });
 
     tokio::spawn(async { warp_http_redirect().await });
